@@ -4,6 +4,56 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
+import pandas as pd
+import glob
+import os
+
+def load_input(input_directory):
+    """Load text files in 'input_directory/'"""
+
+    files = glob.glob(f"{input_directory}/*")
+    dataframes = [
+        pd.read_csv(
+            file,
+            header=None,
+            delimiter="\t",
+            names=["phrase","sentiment"],
+            index_col=None,
+        )
+        for file in files
+    ]
+
+    dataframe = pd.concat(dataframes, ignore_index=True)
+
+    dataframe["target"] = input_directory.split("/")[3]
+
+    return dataframe
+
+def save_output(dataframe1, dataframe2, output_directory, output_name1, output_name2):
+    """Save output to a file."""
+
+    if os.path.exists(output_directory):
+        files = glob.glob(f"{output_directory}/*")
+        for file in files:
+            os.remove(file)
+        os.rmdir(output_directory)
+
+    os.makedirs(output_directory)
+
+    dataframe1.to_csv(
+        f"{output_directory}/{output_name1}",
+        sep=",",
+        index=False,
+        header=True,
+    )
+    dataframe2.to_csv(
+        f"{output_directory}/{output_name2}",
+        sep=",",
+        index=False,
+        header=True,
+    )
+
+
 
 
 def pregunta_01():
@@ -71,3 +121,31 @@ def pregunta_01():
 
 
     """
+    train_negative = load_input("files/input/train/negative")
+    train_positive = load_input("files/input/train/positive")
+    train_neutral = load_input("files/input/train/neutral")
+
+    test_negative = load_input("files/input/test/negative")
+    test_positive = load_input("files/input/test/positive")
+    test_neutral = load_input("files/input/test/neutral")
+
+    df_train = pd.concat([train_negative,train_neutral,train_positive], ignore_index=True)
+    df_test = pd.concat([test_negative,test_neutral,test_positive],ignore_index=True)
+
+    save_output(df_train, df_test, "files/output", "train_dataset.csv", "test_dataset.csv")
+    return
+
+pregunta_01()
+
+train_dataset = pd.read_csv("files/output/train_dataset.csv")
+
+assert "phrase" in train_dataset.columns
+assert "target" in train_dataset.columns
+
+
+
+
+
+    
+
+
